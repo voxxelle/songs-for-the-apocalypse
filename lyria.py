@@ -20,6 +20,13 @@ import wave
 from datetime import datetime
 from pathlib import Path
 
+# Load .env file if present
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # dotenv is optional
+
 try:
     from google import genai
     from google.genai import types

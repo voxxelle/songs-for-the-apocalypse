@@ -65,11 +65,15 @@ Ambient, Crunchy Distortion, Dreamy, Ethereal Ambience, Experimental, Huge Drop,
 
 Get your key from [Google AI Studio](https://aistudio.google.com/apikey).
 
-Set it as an environment variable:
+**Option 1: Use a `.env` file (recommended)**
+```bash
+cp .env.example .env
+# Edit .env and add your key
+```
+
+**Option 2: Environment variable**
 ```bash
 export GOOGLE_API_KEY="your-key"
-# or
-export GEMINI_API_KEY="your-key"
 ```
 
 ## Output
