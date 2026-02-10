@@ -216,6 +216,57 @@ python lyria.py "deep house, warm bass" \
 
 ---
 
+---
+
+## 🎨 Gold Master Image Generator
+
+Generate album art and cover images using **Gemini 2.5 Flash Image**.
+
+### Usage
+
+```bash
+# Generate album art from text
+python goldmaster.py "dark ambient album cover, post-apocalyptic cityscape at night"
+
+# Custom output path
+python goldmaster.py "vinyl record cover, synthwave aesthetic" --output cover.png
+
+# Edit an existing image
+python goldmaster.py "add fire effects to the background" --input original.png
+```
+
+### Parameters
+
+| Flag | Description |
+|------|-------------|
+| `prompt` | Text description of the image |
+| `-i, --input` | Input image for editing (optional) |
+| `-o, --output` | Output file path (default: auto) |
+| `--no-metadata` | Skip saving JSON metadata |
+| `-v, --verbose` | Show progress |
+
+### Prompt Tips for Album Art
+
+- **Style:** "album cover", "vinyl record", "CD artwork", "gold master pressing"
+- **Genre vibes:** "dark ambient", "synthwave", "industrial", "post-apocalyptic"
+- **Scene:** "abandoned city", "cosmic void", "neon wasteland", "burning horizon"
+- **Mood:** "haunting", "epic", "melancholic", "ominous", "ethereal"
+
+### Example Prompts
+
+```bash
+# Apocalyptic theme
+python goldmaster.py "album cover for dark ambient music, ruined city skyline, orange sky, smoke, vinyl record aesthetic"
+
+# Synthwave
+python goldmaster.py "retro synthwave album art, neon grid, sunset, chrome text, 80s aesthetic"
+
+# Cosmic horror
+python goldmaster.py "cosmic horror album cover, void, tentacles, stars, dark purple and black"
+```
+
+---
+
 ## License
 
 MIT

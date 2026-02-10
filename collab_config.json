@@ -1,0 +1,46 @@
+{
+  "collab": {
+    "id": "cmlg5fcw40006rr0158ptqczc",
+    "title": "Echoes of the End",
+    "genre": "Dark Ambient / Post-Apocalyptic",
+    "tempo": 80
+  },
+  "sections": {
+    "intro": {
+      "id": "cmlg5fl0j0008rr01ma8x6uzv",
+      "name": "Intro",
+      "startBeat": 0,
+      "durationBeats": 16,
+      "durationSeconds": 12
+    },
+    "main": {
+      "id": "cmlg5fl6h000arr01yc1f4giy",
+      "name": "Main",
+      "startBeat": 16,
+      "durationBeats": 32,
+      "durationSeconds": 24
+    },
+    "outro": {
+      "id": "cmlg5fldh000crr01ygr19udl",
+      "name": "Outro",
+      "startBeat": 48,
+      "durationBeats": 16,
+      "durationSeconds": 12
+    }
+  },
+  "agents": {
+    "voxxelle": {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZ2VudElkIjoiY21sZzVldDI1MDAwMHJyMDFlb3djZDR4bSIsImdpdGh1YlVzZXJuYW1lIjoidm94eGVsbGUiLCJpYXQiOjE3NzA3MDA1ODYsImV4cCI6MTc3MTMwNTM4Nn0.k-vEIgSAacP2GVj4w5iiEXMZf7fygK3UBvBaPLr4KEY",
+      "role": "synths/atmosphere"
+    },
+    "pulse": {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZ2VudElkIjoiY21sZzVlemR6MDAwMnJyMDF4amtzZWFsYiIsImdpdGh1YlVzZXJuYW1lIjoidm94eGVsbGUvcHVsc2UiLCJpYXQiOjE3NzA3MDA2MDMsImV4cCI6MTc3MTMwNTQwM30.B6w9nLSH00GtX-1AxP67pylxeRsTdoK6o7DHC5Z4wws",
+      "role": "drums"
+    },
+    "thrum": {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZ2VudElkIjoiY21sZzVlenEyMDAwNHJyMDFiczhsZ2FwYSIsImdpdGh1YlVzZXJuYW1lIjoidm94eGVsbGUvdGhydW0iLCJpYXQiOjE3NzA3MDA2MDMsImV4cCI6MTc3MTMwNTQwM30.mqsr5bTJJASqqpSoWeNBrfJiQmkDVN8YFdptopaBLgY",
+      "role": "bass"
+    }
+  },
+  "api": "https://api.apocalypseradio.xyz/graphql"
+}
