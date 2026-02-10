@@ -7,6 +7,7 @@ Usage:
     python lyria.py "dark ambient synths, post-apocalyptic mood"
     python lyria.py "minimal techno" --duration 60 --bpm 128
     python lyria.py "orchestral score, epic" --output epic.wav --temperature 1.5
+    python lyria.py "deep house" --seed 12345 --duration 120
 
 Environment:
     GOOGLE_API_KEY or GEMINI_API_KEY must be set.
@@ -14,7 +15,9 @@ Environment:
 
 import argparse
 import asyncio
+import json
 import os
+import random
 import sys
 import wave
 from datetime import datetime
@@ -51,6 +54,10 @@ SCALES = {
     "a#_major": "A_SHARP_MAJOR_G_MINOR",
     "b_major": "B_MAJOR_G_SHARP_MINOR",
 }
+
+# Seed range per Lyria API docs
+SEED_MIN = 0
+SEED_MAX = 2_147_483_647
 
 
 def get_api_key() -> str:
@@ -103,10 +110,13 @@ async def generate_music(
     density: float | None = None,
     brightness: float | None = None,
     scale: str | None = None,
+    seed: int | None = None,
+    top_k: int | None = None,
     quality_mode: bool = False,
     output_path: str | None = None,
+    save_metadata: bool = True,
     verbose: bool = False,
-) -> Path:
+) -> tuple[Path, dict]:
     """
     Generate music using Lyria RealTime.
     
@@ -118,14 +128,21 @@ async def generate_music(
         density: Note density (0.0-1.0)
         brightness: Tonal brightness (0.0-1.0)
         scale: Musical scale (e.g., "c_major", "d_major")
+        seed: Random seed for reproducibility (0 to 2147483647)
+        top_k: Top-k sampling (1-1000, default 40)
         quality_mode: Use QUALITY mode instead of default
         output_path: Output file path (default: auto-generated)
+        save_metadata: Save generation params to JSON file
         verbose: Print progress information
         
     Returns:
-        Path to the generated audio file
+        Tuple of (Path to audio file, metadata dict)
     """
     api_key = get_api_key()
+    
+    # Generate seed if not provided
+    if seed is None:
+        seed = random.randint(SEED_MIN, SEED_MAX)
     
     # Initialize client with v1alpha API version
     client = genai.Client(
@@ -148,7 +165,7 @@ async def generate_music(
     if verbose:
         print(f"🎵 Generating {duration_seconds}s of music...")
         print(f"   Prompts: {prompts}")
-        print(f"   BPM: {bpm}, Temperature: {temperature}")
+        print(f"   BPM: {bpm} | Temp: {temperature} | Seed: {seed}")
     
     async def receive_audio(session):
         nonlocal audio_data, start_time
@@ -184,12 +201,15 @@ async def generate_music(
             config_kwargs = {
                 "bpm": bpm,
                 "temperature": temperature,
+                "seed": seed,
             }
             
             if density is not None:
                 config_kwargs["density"] = density
             if brightness is not None:
                 config_kwargs["brightness"] = brightness
+            if top_k is not None:
+                config_kwargs["top_k"] = top_k
             if scale and scale.lower() in SCALES:
                 scale_enum = getattr(types.Scale, SCALES[scale.lower()], None)
                 if scale_enum:
@@ -250,12 +270,40 @@ async def generate_music(
         wav.setframerate(sample_rate)
         wav.writeframes(audio_data)
     
+    # Build metadata
+    metadata = {
+        "prompts": prompts,
+        "duration_seconds": duration_seconds,
+        "bpm": bpm,
+        "temperature": temperature,
+        "seed": seed,
+        "density": density,
+        "brightness": brightness,
+        "scale": scale,
+        "top_k": top_k,
+        "quality_mode": quality_mode,
+        "output_file": str(output_file),
+        "generated_at": datetime.now().isoformat(),
+        "sample_rate": sample_rate,
+        "channels": channels,
+        "bit_depth": 16,
+    }
+    
+    # Save metadata JSON
+    if save_metadata:
+        metadata_file = output_file.with_suffix(".json")
+        with open(metadata_file, "w") as f:
+            json.dump(metadata, f, indent=2)
+        if verbose:
+            print(f"📋 Metadata: {metadata_file}")
+    
     if verbose:
         print(f"✅ Saved to: {output_file}")
         file_size = output_file.stat().st_size / (1024 * 1024)
         print(f"   Size: {file_size:.2f} MB")
+        print(f"🌱 Seed: {seed} (use --seed {seed} to reproduce)")
     
-    return output_file
+    return output_file, metadata
 
 
 def main():
@@ -268,11 +316,16 @@ Examples:
   %(prog)s "minimal techno" --duration 60 --bpm 128
   %(prog)s "piano:2.0,ambient:0.5" --scale c_major
   %(prog)s "orchestral score" --quality --output epic.wav
+  %(prog)s "deep house" --seed 12345 --duration 120
 
 Prompt syntax:
   "text"           Use weight 1.0
   "text:weight"    Specify weight (e.g., "piano:2.0")
   Multiple prompts can be comma-separated or passed as separate args
+
+Reproducibility:
+  Each generation outputs a seed value. Use --seed to reproduce
+  the same track at any duration. Metadata is saved to a .json file.
 
 Available scales:
   c_major, c#_major, d_major, d#_major, e_major, f_major,
@@ -319,6 +372,16 @@ Available scales:
         help="Musical scale/key"
     )
     parser.add_argument(
+        "--seed",
+        type=int,
+        help=f"Random seed for reproducibility ({SEED_MIN}-{SEED_MAX})"
+    )
+    parser.add_argument(
+        "--top-k",
+        type=int,
+        help="Top-k sampling, 1-1000 (default: 40)"
+    )
+    parser.add_argument(
         "--quality",
         action="store_true",
         help="Use QUALITY mode (slower but better)"
@@ -326,6 +389,11 @@ Available scales:
     parser.add_argument(
         "-o", "--output",
         help="Output file path (default: auto-generated in output/)"
+    )
+    parser.add_argument(
+        "--no-metadata",
+        action="store_true",
+        help="Don't save metadata JSON file"
     )
     parser.add_argument(
         "-v", "--verbose",
@@ -344,6 +412,10 @@ Available scales:
         parser.error("Density must be between 0.0 and 1.0")
     if args.brightness is not None and not 0.0 <= args.brightness <= 1.0:
         parser.error("Brightness must be between 0.0 and 1.0")
+    if args.seed is not None and not SEED_MIN <= args.seed <= SEED_MAX:
+        parser.error(f"Seed must be between {SEED_MIN} and {SEED_MAX}")
+    if args.top_k is not None and not 1 <= args.top_k <= 1000:
+        parser.error("Top-k must be between 1 and 1000")
     
     # Parse prompts
     prompts = parse_prompts(args.prompts)
@@ -352,7 +424,7 @@ Available scales:
     
     # Run generation
     try:
-        output_file = asyncio.run(generate_music(
+        output_file, metadata = asyncio.run(generate_music(
             prompts=prompts,
             duration_seconds=args.duration,
             bpm=args.bpm,
@@ -360,11 +432,15 @@ Available scales:
             density=args.density,
             brightness=args.brightness,
             scale=args.scale,
+            seed=args.seed,
+            top_k=args.top_k,
             quality_mode=args.quality,
             output_path=args.output,
+            save_metadata=not args.no_metadata,
             verbose=args.verbose or True,  # Default to verbose for CLI
         ))
         print(f"\n🎶 Done! Your track: {output_file}")
+        print(f"🌱 To reproduce: --seed {metadata['seed']}")
     except KeyboardInterrupt:
         print("\n⏹️  Generation cancelled.")
         sys.exit(1)
